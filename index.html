@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HeapMatch Workstation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- Navigation rail -->
+  <nav class="rail" aria-label="Views">
+    <div class="brand" title="HeapMatch">
+      <svg viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">
+        <path d="M14 14L14 3A11 11 0 0 1 23.53 19.5Z" fill="#F4F4F6"/>
+        <path d="M14 14L23.53 19.5A11 11 0 0 1 4.47 19.5Z" fill="#C4B5FD"/>
+        <path d="M14 14L4.47 19.5A11 11 0 0 1 14 3Z" fill="#D9F99D"/>
+      </svg>
+    </div>
+    <div class="rail-items" id="railItems">
+      <button class="rail-btn active" data-view="overview" title="Exchange Overview" aria-label="Exchange Overview">
+        <svg viewBox="0 0 24 24"><rect x="3.75" y="3.75" width="6.5" height="6.5" rx="1.5"/><rect x="13.75" y="3.75" width="6.5" height="6.5" rx="1.5"/><rect x="3.75" y="13.75" width="6.5" height="6.5" rx="1.5"/><rect x="13.75" y="13.75" width="6.5" height="6.5" rx="1.5"/></svg>
+      </button>
+      <button class="rail-btn" data-view="array" title="1D Array &amp; Implicit Binary Tree" aria-label="Array and tree">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="6" cy="14" r="2"/><circle cx="18" cy="14" r="2"/><path d="M10.8 6.7L7.2 12.3M13.2 6.7l3.6 5.6"/><path d="M3 20.25h18"/></svg>
+      </button>
+      <button class="rail-btn" data-view="debug" title="Step-by-Step Heap Sort Debugger" aria-label="Debugger">
+        <svg viewBox="0 0 24 24"><path d="M7 4.75v14.5L19 12z"/></svg>
+      </button>
+      <button class="rail-btn" data-view="stress" title="Batch Auction Stress Lab" aria-label="Stress lab">
+        <svg viewBox="0 0 24 24"><path d="M13 3.5L5.5 13.25h5.5L10 20.5l8.5-10.25H13z"/></svg>
+      </button>
+    </div>
+    <div class="rail-foot">
+      <button class="icon-btn" id="soundBtn" title="Tactile audio detents (off)" aria-pressed="false" aria-label="Toggle audio">
+        <svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path class="wave" d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="top">
+    <div class="seg" id="tickerSeg" role="tablist" aria-label="Ticker">
+      <span class="seg-pill"></span>
+      <button class="active" data-v="NVDA">NVDA</button>
+      <button data-v="AAPL">AAPL</button>
+      <button data-v="MSFT">MSFT</button>
+      <button data-v="TSLA">TSLA</button>
+    </div>
+    <div class="counter">Active Heap Nodes: <b class="mono" id="nodeCount">0</b></div>
+    <div class="counter muted">Batch window <b class="mono" id="batchClock">00:06</b></div>
+    <div class="spacer"></div>
+    <label class="toggle" title="Auto-run batch auctions and simulated order flow">
+      <input type="checkbox" id="autoToggle" checked><span class="toggle-track"><span class="toggle-knob"></span></span><span>Live flow</span>
+    </label>
+  </header>
+
+  <!-- Main canvas -->
+  <main class="canvas" id="canvas">
+
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <div class="card">
+        <div class="card-head">
+          <h2>Trend &amp; Spread Dynamics</h2>
+          <div class="seg" id="chartSeg"><span class="seg-pill"></span><button class="active" data-v="both">Both</button><button data-v="bid">Bid</button><button data-v="ask">Ask</button></div>
+        </div>
+        <div class="chart-wrap" id="chartWrap">
+          <svg id="chart" viewBox="0 0 800 260" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="callout" id="callout" hidden></div>
+        </div>
+      </div>
+
+      <div class="card split">
+        <div class="sub gauge-sub">
+          <div class="gauge">
+            <svg viewBox="0 0 180 180" id="gauge">
+              <circle cx="90" cy="90" r="74" class="g-track"/>
+              <circle cx="90" cy="90" r="74" class="g-bid" id="gBid"/>
+              <circle cx="90" cy="90" r="74" class="g-ask" id="gAsk"/>
+              <g class="prism"><path d="M90 66l16 10v20l-16 10-16-10V76z"/><path d="M90 66v40M74 76l32 20M106 76L74 96"/></g>
+            </svg>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><span class="kpi-label">Resting Notional</span><div class="kpi-row"><b class="kpi-val mono" id="kpi1">0</b><span class="delta pos" id="kpi1d">+0.00%</span></div></div>
+            <div class="kpi"><span class="kpi-label">Matched Liquidity</span><div class="kpi-row"><b class="kpi-val mono" id="kpi2">0</b><span class="delta neg" id="kpi2d">+0.00%</span></div></div>
+          </div>
+        </div>
+        <div class="sub bars-sub">
+          <div class="card-head slim">
+            <h2 id="barsTitle">Array Slots</h2>
+            <div class="seg" id="barSeg"><span class="seg-pill"></span><button class="active" data-v="slots">Slots</button><button data-v="levels">Levels</button><button data-v="passes">Passes</button></div>
+          </div>
+          <div class="caps" id="caps"></div>
+          <div class="legend"><i class="dot b"></i>Bid max-heap <i class="dot a"></i>Ask min-heap</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Sorted Order Book &amp; Heap Audit</h2><span class="meta mono" id="bookMeta"></span></div>
+        <div class="book" id="book"></div>
+      </div>
+    </section>
+
+    <!-- ARRAY / TREE -->
+    <section class="view" id="view-array">
+      <div class="card">
+        <div class="card-head">
+          <h2>1D Array &amp; Implicit Binary Tree</h2>
+          <div class="seg" id="archSeg"><span class="seg-pill"></span><button class="active" data-v="bids">Bids</button><button data-v="asks">Asks</button></div>
+        </div>
+        <p class="note">Hover any slot. <span class="k lime">Selected</span> <span class="k lav">Parent &amp; children</span> &mdash; computed as <span class="mono">&lfloor;(i&minus;1)/2&rfloor;</span>, <span class="mono">2i+1</span>, <span class="mono">2i+2</span>. No pointers exist: the tree is only index math over one flat array.</p>
+        <div class="strip" id="arrStrip"></div>
+        <div class="idx-info mono" id="idxInfo">Hover a slot.</div>
+        <svg id="treeSvg" class="tree" viewBox="0 0 720 290" preserveAspectRatio="xMidYMid meet"></svg>
+        <p class="note" id="heapProof"></p>
+      </div>
+    </section>
+
+    <!-- DEBUGGER -->
+    <section class="view" id="view-debug">
+      <div class="card">
+        <div class="card-head">
+          <h2>Step-by-Step Heap Sort Debugger</h2>
+          <div class="seg" id="dbgSeg"><span class="seg-pill"></span><button class="active" data-v="bids">Bids</button><button data-v="asks">Asks</button></div>
+        </div>
+        <p class="note">Runs the real engine <span class="mono">heapSortOrders()</span> on a shuffled copy of the live book and records every comparison and swap through its telemetry hook.</p>
+        <div class="dbg-controls">
+          <button class="btn" id="dbgReshuffle">Reshuffle</button>
+          <button class="btn" id="dbgPrev" aria-label="Previous step">&larr;</button>
+          <button class="btn primary" id="dbgPlay">Play</button>
+          <button class="btn" id="dbgNext" aria-label="Next step">&rarr;</button>
+          <input type="range" id="dbgScrub" min="0" max="0" value="0" aria-label="Step scrubber">
+          <span class="mono muted" id="dbgPos">0 / 0</span>
+        </div>
+        <div class="dbg-phase" id="dbgPhase"></div>
+        <div class="strip" id="dbgStrip"></div>
+        <svg id="dbgTree" class="tree" viewBox="0 0 720 290" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="dbg-msg mono" id="dbgMsg"></div>
+        <div class="dbg-stats mono" id="dbgStats"></div>
+      </div>
+    </section>
+
+    <!-- STRESS -->
+    <section class="view" id="view-stress">
+      <div class="card">
+        <div class="card-head"><h2>Batch Auction Stress Lab</h2><span class="meta">Adversarial order-flow generator</span></div>
+        <div class="stress-controls">
+          <div class="seg" id="patSeg"><span class="seg-pill"></span><button class="active" data-v="random">Random</button><button data-v="ascending">Ascending</button><button data-v="descending">Descending</button><button data-v="duplicate">Duplicates</button></div>
+          <label class="slider-label">Orders <b class="mono" id="stressNVal">10,000</b>
+            <input type="range" id="stressN" min="1000" max="100000" step="1000" value="10000"></label>
+          <button class="btn primary" id="stressRun">Run</button>
+          <button class="btn" id="stressAll">Run all patterns</button>
+        </div>
+        <div class="stress-grid" id="stressStats"></div>
+        <div class="stress-table" id="stressTable"></div>
+        <p class="note" id="stressNote">Pure in-place heap sort, no Array.prototype.sort. Time is measured with performance.now() in this browser tab, so it depends on your hardware and JIT warm-up.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Right rail -->
+  <aside class="side">
+    <div class="side-sec">
+      <div class="card-head slim"><h2>Active Makers</h2></div>
+      <p class="note tight">Liquidity providers</p>
+      <div class="avatars" id="avatars"></div>
+      <button class="btn wide" id="openOrder"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Submit Order</button>
+    </div>
+    <div class="side-sec grow">
+      <div class="card-head slim"><h2>Heap Operations</h2></div>
+      <ol class="timeline" id="timeline"></ol>
+    </div>
+    <div class="side-foot">
+      <button class="btn pill" id="stepBtn">Step Heap Sort</button>
+      <svg class="hexbadge" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4l17 10v20L24 44 7 34V14z"/><path d="M24 4v40M7 14l34 20M41 14L7 34" opacity=".5"/><text x="24" y="29" text-anchor="middle">H</text></svg>
+    </div>
+
+    <!-- Order drawer -->
+    <div class="drawer" id="drawer" hidden>
+      <div class="card-head slim"><h2>Submit Order</h2><button class="icon-btn" id="closeOrder" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="seg wide-seg" id="sideSeg"><span class="seg-pill"></span><button class="active buy" data-v="BUY">BUY</button><button class="sell" data-v="SELL">SELL</button></div>
+      <label class="field">Limit price (USD)<input type="number" id="ordPrice" step="0.01" class="mono"></label>
+      <label class="field">Quantity <b class="mono" id="ordQtyVal">100</b>
+        <input type="range" id="ordQty" min="10" max="1000" step="10" value="100"></label>
+      <label class="field">Trader
+        <select id="ordTrader"></select></label>
+      <button class="btn primary wide" id="ordSubmit">Append to <span id="ordTarget">bids[]</span></button>
+      <p class="note tight" id="ordHint"></p>
+    </div>
+  </aside>
+</div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
